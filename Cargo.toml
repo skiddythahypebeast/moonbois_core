@@ -1,0 +1,13 @@
+[package]
+name = "moonbois_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = "1.0.217"
+serde_json = "1.0.138"
+solana-sdk = "2.1.13"
+rocket = "0.5.1"
+thiserror = "2.0.11"
+reqwest = { version = "0.12.12", features = ["json"] }
+url = "2.5.4"
