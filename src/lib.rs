@@ -10,7 +10,7 @@ pub struct UserDTO {
     pub id: i32,
     pub public_key: Pubkey,
     pub sol_balance: u64,
-    pub wallets: HashMap<Pubkey, WalletDTO>
+    pub wallets: HashMap<String, WalletDTO>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -49,7 +49,7 @@ pub struct ProjectDTO {
 pub struct UserBalancesDTO {
     pub created_at: u64,
     pub user: BalanceDTO,
-    pub wallets: HashMap<Pubkey, BalanceDTO>
+    pub wallets: HashMap<String, BalanceDTO>
 }
 
 #[derive(Serialize, Deserialize, Clone)]

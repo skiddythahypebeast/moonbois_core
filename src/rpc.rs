@@ -9,7 +9,6 @@ use crate::UserExportDTO;
 
 use reqwest::Client;
 use reqwest::Error;
-use reqwest::StatusCode;
 use reqwest::Url;
 use serde_json::json;
 use solana_sdk::pubkey::Pubkey;
@@ -49,14 +48,12 @@ impl MoonboisClient {
 
         let response = self.inner.execute(request).await?;
 
-        if response.status() == StatusCode::OK {
+        if response.status().is_success() {
             self.jwt = Some(response.text().await?);
             return Ok(())
-        } else if response.status() == StatusCode::NOT_FOUND {
-            return Err(MoonboisClientError::NotFound)
-        } else {
-            panic!("Unhandled status code");
-        }
+        } 
+        
+        Err(MoonboisClientError::ServerError(response.text().await?))
     }
     pub async fn create_user(&self, credentials: &Credentials, signer: &Keypair) -> Result<(), MoonboisClientError> {
         let message = "authorize";
@@ -121,17 +118,11 @@ impl MoonboisClient {
             
             let response = self.inner.execute(request).await?;
 
-            if response.status() == StatusCode::NOT_FOUND {
-                return Err(MoonboisClientError::NotAccepted);
-            }
-            
-            if response.status() != StatusCode::OK {
-                return Err(MoonboisClientError::NotAccepted);
+            if response.status().is_success() {
+                return Ok(response.json().await?)
             }
 
-            let response_text = response.text().await?;
-
-            return Ok(serde_json::from_str(&response_text)?)
+            return Err(MoonboisClientError::ServerError(response.text().await?))
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -141,12 +132,14 @@ impl MoonboisClient {
             let request = self.inner.get(self.base_url.join("/user/export")?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
-
-            let response = self.inner.execute(request).await?;
             
-            assert!(response.status().is_success());
+            let response = self.inner.execute(request).await?;
 
-            return Ok(response.json().await?);
+            if response.status().is_success() {
+                return Ok(response.json().await?)
+            }
+
+            return Err(MoonboisClientError::ServerError(response.text().await?))
         };
 
         Err(MoonboisClientError::MissingJWT)
