@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 
@@ -8,7 +10,7 @@ pub struct UserDTO {
     pub id: i32,
     pub public_key: Pubkey,
     pub sol_balance: u64,
-    pub wallets: Vec<WalletDTO>
+    pub wallets: HashMap<Pubkey, WalletDTO>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -41,6 +43,19 @@ pub struct ProjectDTO {
     pub pumpfun: Option<PumpfunDTO>,
     pub mint_id: Option<Pubkey>,
     pub pending_snipe: bool
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct UserBalancesDTO {
+    pub created_at: u64,
+    pub user: BalanceDTO,
+    pub wallets: HashMap<Pubkey, BalanceDTO>
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct BalanceDTO {
+    pub sol_balance: u64,
+    pub token_balance: Option<u64>
 }
 
 #[derive(Serialize, Deserialize)]

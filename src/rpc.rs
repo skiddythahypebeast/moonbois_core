@@ -3,6 +3,7 @@ use crate::CreateProjectDTO;
 use crate::ProjectDTO;
 use crate::ProjectRecordDTO;
 use crate::SellResponse;
+use crate::UserBalancesDTO;
 use crate::UserDTO;
 use crate::UserExportDTO;
 
@@ -77,6 +78,23 @@ impl MoonboisClient {
         }
 
         return Err(MoonboisClientError::ServerError(response.text().await?))
+    }
+    pub async fn get_user_balances(&self) -> Result<UserBalancesDTO, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt { 
+            let request = self.inner.get(self.base_url.join("/user/balances")?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+            
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(response.json().await?)
+            }
+
+            return Err(MoonboisClientError::ServerError(response.text().await?))
+        };
+
+        Err(MoonboisClientError::MissingJWT)
     }
     pub async fn recover_sol(&self) -> Result<(), MoonboisClientError> {
         if let Some(jwt) = &self.jwt { 
