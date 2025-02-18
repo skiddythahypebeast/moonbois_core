@@ -7,12 +7,14 @@ pub mod rpc;
 pub struct UserDTO {
     pub id: i32,
     pub public_key: Pubkey,
+    pub sol_balance: u64,
     pub wallets: Vec<WalletDTO>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WalletDTO {
     pub id: i32,
+    pub sol_balance: u64,
     pub public_key: Pubkey
 }
 
