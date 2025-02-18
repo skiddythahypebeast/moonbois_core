@@ -15,6 +15,7 @@ pub struct UserDTO {
 pub struct WalletDTO {
     pub id: i32,
     pub sol_balance: u64,
+    pub token_balance: Option<u64>,
     pub public_key: Pubkey
 }
 
