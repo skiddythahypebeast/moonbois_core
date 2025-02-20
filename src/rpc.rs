@@ -10,16 +10,18 @@ use crate::UserExportDTO;
 
 use reqwest::Client;
 use reqwest::Error;
+use reqwest::StatusCode;
 use reqwest::Url;
 use serde_json::json;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
-use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::tungstenite::http::uri::InvalidUri;
 use url::ParseError;
 
 use crate::Credentials;
+
+// TODO - better error handling
 
 pub enum Routes {
     User,
@@ -44,7 +46,7 @@ impl MoonboisClient {
         let message = "authorize";
         let signature = credentials.signer.sign_message(message.as_bytes());
         let pubkey = credentials.signer.pubkey().to_string();
-        let request = self.inner.get(self.base_url.join("/auth/")?)
+        let request = self.inner.get(self.base_url.join("/auth")?)
             .header("X-public-key", pubkey)
             .header("X-signature", signature.to_string())
             .header("X-message", message)
@@ -55,9 +57,13 @@ impl MoonboisClient {
         if response.status().is_success() {
             self.jwt = Some(response.text().await?);
             return Ok(())
-        } 
+        }
+
+        if let StatusCode::NOT_FOUND = response.status() {
+            return Err(MoonboisClientError::NotFound);
+        }
         
-        Err(MoonboisClientError::ServerError(response.text().await?))
+        Err(MoonboisClientError::UnhandledServerError(response.text().await?))
     }
     pub async fn create_user(&self, credentials: &Credentials, signer: &Keypair) -> Result<(), MoonboisClientError> {
         let message = "authorize";
@@ -78,7 +84,11 @@ impl MoonboisClient {
             return Ok(())
         }
 
-        return Err(MoonboisClientError::ServerError(response.text().await?))
+        if let StatusCode::NOT_FOUND = response.status() {
+            return Err(MoonboisClientError::NotFound);
+        }
+
+        return Err(MoonboisClientError::UnhandledServerError(response.text().await?))
     }
     pub async fn get_user_balances(&self, mint_id: Option<Pubkey>) -> Result<UserBalancesDTO, MoonboisClientError> {
         if let Some(jwt) = &self.jwt { 
@@ -97,8 +107,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?)
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?))
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?))
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -114,8 +128,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(())
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?))
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?))
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -131,8 +149,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?)
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?))
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?))
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -148,8 +170,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?)
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?))
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?))
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -171,8 +197,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json::<ProjectDTO>().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -188,8 +218,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -206,8 +240,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json::<ProjectDTO>().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -224,8 +262,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(());
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
             
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -242,8 +284,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -260,8 +306,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(());
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -278,8 +328,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -296,8 +350,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -314,8 +372,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -332,8 +394,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(response.json().await?);
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -350,8 +416,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(());
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -368,8 +438,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(());
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -386,8 +460,12 @@ impl MoonboisClient {
             if response.status().is_success() {
                 return Ok(());
             }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
 
-            return Err(MoonboisClientError::ServerError(response.text().await?));
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
         };
 
         Err(MoonboisClientError::MissingJWT)
@@ -405,13 +483,11 @@ pub enum MoonboisClientError {
     #[error("JSON Error: {0}")]
     JsonError(#[from] serde_json::Error),
     #[error("Server error: {0}")]
-    ServerError(String),
+    UnhandledServerError(String),
     #[error("Request was not accepted")]
     NotAccepted,
     #[error("Resource was not found")]
     NotFound,
-    #[error("Websocket error: {0}")]
-    WebsocketError(#[from] tungstenite::Error),
     #[error("JWT not found")]
     MissingJWT
 }
