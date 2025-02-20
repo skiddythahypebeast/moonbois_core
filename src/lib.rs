@@ -5,7 +5,7 @@ use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 
 pub mod rpc;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserDTO {
     pub id: i32,
     pub public_key: Pubkey,
@@ -13,7 +13,7 @@ pub struct UserDTO {
     pub wallets: HashMap<String, WalletDTO>
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WalletDTO {
     pub id: i32,
     pub sol_balance: u64,

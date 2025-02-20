@@ -11,3 +11,4 @@ rocket = "0.5.1"
 thiserror = "2.0.11"
 reqwest = { version = "0.12.12", features = ["json"] }
 url = "2.5.4"
+tokio-tungstenite = "0.26.2"

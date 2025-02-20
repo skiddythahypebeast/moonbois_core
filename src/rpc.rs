@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use crate::BuyResponse;
 use crate::CreateProjectDTO;
 use crate::ProjectDTO;
-use crate::ProjectRecordDTO;
 use crate::SellResponse;
 use crate::UserBalancesDTO;
 use crate::UserDTO;
@@ -14,6 +15,8 @@ use serde_json::json;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
+use tokio_tungstenite::tungstenite;
+use tokio_tungstenite::tungstenite::http::uri::InvalidUri;
 use url::ParseError;
 
 use crate::Credentials;
@@ -22,10 +25,11 @@ pub enum Routes {
     User,
 }
 
+#[derive(Clone)]
 pub struct MoonboisClient {
     inner: Client,
     base_url: Url,
-    jwt: Option<String>
+    pub jwt: Option<String>
 }
 
 impl MoonboisClient {
@@ -76,9 +80,15 @@ impl MoonboisClient {
 
         return Err(MoonboisClientError::ServerError(response.text().await?))
     }
-    pub async fn get_user_balances(&self) -> Result<UserBalancesDTO, MoonboisClientError> {
+    pub async fn get_user_balances(&self, mint_id: Option<Pubkey>) -> Result<UserBalancesDTO, MoonboisClientError> {
         if let Some(jwt) = &self.jwt { 
-            let request = self.inner.get(self.base_url.join("/user/balances")?)
+            let slug = if let Some(mint_id) = mint_id {
+                format!("/user/balances?mint_id={}", mint_id)
+            } else {
+                format!("/user/balances")
+            };
+
+            let request = self.inner.get(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
             
@@ -117,7 +127,7 @@ impl MoonboisClient {
                 .build()?;
             
             let response = self.inner.execute(request).await?;
-
+            
             if response.status().is_success() {
                 return Ok(response.json().await?)
             }
@@ -167,7 +177,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_project_records(&self) -> Result<Vec<ProjectRecordDTO>, MoonboisClientError> {
+    pub async fn get_user_projects(&self) -> Result<HashMap<i32, ProjectDTO>, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let request = self.inner.get(self.base_url.join("/project/all")?)
                 .header("Authorization", format!("Bearer {jwt}"))
@@ -176,7 +186,7 @@ impl MoonboisClient {
             let response = self.inner.execute(request).await?;
 
             if response.status().is_success() {
-                return Ok(response.json::<Vec<ProjectRecordDTO>>().await?);
+                return Ok(response.json().await?);
             }
 
             return Err(MoonboisClientError::ServerError(response.text().await?));
@@ -386,6 +396,8 @@ impl MoonboisClient {
 
 #[derive(thiserror::Error, Debug)]
 pub enum MoonboisClientError {
+    #[error("InvalidUri error: {0}")]
+    InvalidUri(#[from] InvalidUri),
     #[error("Parse error: {0}")]
     ParseError(#[from] ParseError),
     #[error("Reqwest error: {0}")]
@@ -398,6 +410,8 @@ pub enum MoonboisClientError {
     NotAccepted,
     #[error("Resource was not found")]
     NotFound,
+    #[error("Websocket error: {0}")]
+    WebsocketError(#[from] tungstenite::Error),
     #[error("JWT not found")]
     MissingJWT
 }
