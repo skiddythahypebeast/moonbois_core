@@ -37,12 +37,10 @@ pub struct PumpfunDTO {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ProjectDTO {
     pub id: i32,
-    pub owner: Pubkey,
-    pub deployer: Pubkey,
     pub name: String,
-    pub pumpfun: Option<PumpfunDTO>,
-    pub mint_id: Option<Pubkey>,
-    pub pending_snipe: bool
+    pub deployer: Pubkey,
+    pub user_id: i32,
+    pub pumpfun: PumpfunDTO
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -60,8 +58,7 @@ pub struct BalanceDTO {
 
 #[derive(Serialize, Deserialize)]
 pub struct CreateProjectDTO {
-    pub name: String,
-    pub deployer: Pubkey
+    pub mint_id: Pubkey
 }
 
 #[derive(Serialize, Deserialize, Debug)]

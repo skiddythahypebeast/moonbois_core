@@ -180,12 +180,9 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn create_project(&self, name: String, deployer: Pubkey) -> Result<ProjectDTO, MoonboisClientError> {
-        if let Some(jwt) = &self.jwt { 
-            let body = CreateProjectDTO {
-                deployer,
-                name
-            };
+    pub async fn create_project(&self, mint_id: Pubkey) -> Result<ProjectDTO, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let body = CreateProjectDTO { mint_id };
 
             let request = self.inner.post(self.base_url.join("/project")?)
                 .header("Authorization", format!("Bearer {jwt}"))
@@ -272,9 +269,9 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_snipe_status(&self, project_id: i32) -> Result<bool, MoonboisClientError> {
+    pub async fn get_snipe_status(&self, deployer: &Pubkey, snipe_id: &str) -> Result<bool, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/snipe/status/{}", project_id);
+            let slug = format!("/pumpfun/snipe/{}/{}/status", deployer, snipe_id);
             let request = self.inner.get(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
@@ -294,9 +291,9 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn create_snipe(&self, project_id: i32, wallet_count: usize) -> Result<(), MoonboisClientError> {
+    pub async fn create_snipe(&self, deployer: Pubkey, wallet_count: usize) -> Result<String, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/snipe/{}/{}", project_id, wallet_count);
+            let slug = format!("/pumpfun/snipe/{}/{}", wallet_count, deployer);
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
@@ -304,7 +301,7 @@ impl MoonboisClient {
             let response = self.inner.execute(request).await?;
 
             if response.status().is_success() {
-                return Ok(());
+                return Ok(response.json().await?);
             }
         
             if let StatusCode::NOT_FOUND = response.status() {
@@ -404,9 +401,9 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn cancel_snipe(&self, project_id: i32) -> Result<(), MoonboisClientError> {
+    pub async fn cancel_snipe(&self, deployer: &Pubkey, snipe_id: &str) -> Result<(), MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/snipe/{}", project_id);
+            let slug = format!("/pumpfun/snipe/{}/{}", deployer, snipe_id);
             let request = self.inner.delete(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
