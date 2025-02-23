@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 
+mod pending_snipe;
 pub mod rpc;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

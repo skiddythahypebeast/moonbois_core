@@ -7,6 +7,7 @@ use crate::SellResponse;
 use crate::UserBalancesDTO;
 use crate::UserDTO;
 use crate::UserExportDTO;
+use crate::WalletDTO;
 
 use reqwest::Client;
 use reqwest::Error;
@@ -19,9 +20,8 @@ use solana_sdk::signer::Signer;
 use tokio_tungstenite::tungstenite::http::uri::InvalidUri;
 use url::ParseError;
 
+use crate::pending_snipe::PendingSnipe;
 use crate::Credentials;
-
-// TODO - better error handling
 
 pub enum Routes {
     User,
@@ -269,7 +269,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_snipe_status(&self, deployer: &Pubkey, snipe_id: &str) -> Result<bool, MoonboisClientError> {
+    pub async fn get_snipe_status(&self, deployer: Pubkey, snipe_id: String) -> Result<bool, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/pumpfun/snipe/{}/{}/status", deployer, snipe_id);
             let request = self.inner.get(self.base_url.join(&slug)?)
@@ -291,7 +291,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn create_snipe(&self, deployer: Pubkey, wallet_count: usize) -> Result<String, MoonboisClientError> {
+    pub async fn create_snipe(&self, deployer: Pubkey, wallet_count: usize) -> Result<PendingSnipe, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/pumpfun/snipe/{}/{}", wallet_count, deployer);
             let request = self.inner.post(self.base_url.join(&slug)?)
@@ -301,7 +301,8 @@ impl MoonboisClient {
             let response = self.inner.execute(request).await?;
 
             if response.status().is_success() {
-                return Ok(response.json().await?);
+                let snipe_id: String = response.json().await?;
+                return Ok(PendingSnipe::new(deployer, snipe_id, self));
             }
         
             if let StatusCode::NOT_FOUND = response.status() {
@@ -315,7 +316,7 @@ impl MoonboisClient {
     }
     pub async fn sell(&self, project_id: i32, sniper_id: i32) -> Result<SellResponse, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/sell/{}?wallet={}", project_id, sniper_id);
+            let slug = format!("/pumpfun/sell/{}?wallet_id={}", project_id, sniper_id);
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
@@ -359,7 +360,7 @@ impl MoonboisClient {
     }
     pub async fn buy(&self, project_id: i32, sniper_id: i32, amount_in_sol: u64) -> Result<BuyResponse, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/buy/{}/{}?wallet={}", project_id, amount_in_sol, sniper_id);
+            let slug = format!("/pumpfun/buy/{}/{}?wallet_id={}", project_id, amount_in_sol, sniper_id);
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
@@ -449,6 +450,72 @@ impl MoonboisClient {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/user/wallet/transfer/sol/sniper/{}/{}/{}", from, to, amount);
             let request = self.inner.post(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(());
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn get_user_wallet(&self, wallet_id: i32) -> Result<WalletDTO, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/wallet/{}", wallet_id);
+            let request = self.inner.get(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(response.json().await?);
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn import_user_wallet(&self, signer: &Keypair) -> Result<WalletDTO, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/wallet/{}", signer.to_base58_string());
+            let request = self.inner.post(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(response.json().await?);
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn delete_user_wallet(&self, wallet_id: i32) -> Result<(), MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/wallet/{}", wallet_id);
+            let request = self.inner.delete(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
 
