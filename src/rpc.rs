@@ -38,7 +38,7 @@ impl MoonboisClient {
     pub fn new() -> Self {
         Self { 
             inner: Client::new(), 
-            base_url: Url::parse("https://moonbois-sol-c7ababcccb45.herokuapp.com/").unwrap(),
+            base_url: Url::parse("https://www.moonbois.org").unwrap(),
             jwt: None
         }
     }
