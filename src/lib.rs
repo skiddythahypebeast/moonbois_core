@@ -103,8 +103,8 @@ pub enum PumpfunBumpStatus {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EnableBumpsParams {
-    bump_amount: u64,
-    bump_interval: Duration
+    pub bump_amount: u64,
+    pub bump_interval: Duration
 }
 
 pub struct Credentials {
