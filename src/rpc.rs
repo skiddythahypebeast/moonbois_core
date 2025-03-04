@@ -581,7 +581,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_bumps_status(&self) -> Result<PumpfunBumpStatus, MoonboisClientError> {
+    pub async fn get_bumps_status(&self) -> Result<Option<PumpfunBumpStatus>, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/pumpfun/bump");
             let request = self.inner.get(self.base_url.join(&slug)?)
