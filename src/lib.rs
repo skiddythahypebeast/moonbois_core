@@ -7,7 +7,7 @@ use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 mod pending_snipe;
 pub mod rpc;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserDTO {
     pub id: i32,
     pub public_key: Pubkey,
@@ -15,7 +15,7 @@ pub struct UserDTO {
     pub wallets: HashMap<String, WalletDTO>
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WalletDTO {
     pub id: i32,
     pub sol_balance: u64,
@@ -23,7 +23,7 @@ pub struct WalletDTO {
     pub public_key: Pubkey
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserExportDTO {
     pub wallets: Vec<String>,
     pub main: String
@@ -58,18 +58,18 @@ pub struct BalanceDTO {
     pub token_balance: Option<u64>
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateProjectDTO {
     pub mint_id: Pubkey
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ProjectRecordDTO {
     pub id: i32,
     pub name: String
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SellResponse {
     pub included: bool,
     pub amount: u64,
@@ -77,7 +77,7 @@ pub struct SellResponse {
     pub seller: Pubkey
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BuyResponse {
     pub included: bool,
     pub amount: u64,
