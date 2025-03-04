@@ -29,14 +29,14 @@ pub struct UserExportDTO {
     pub main: String
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PumpfunDTO {
     pub mint_id: Pubkey,
     pub bonding_curve: Pubkey,
     pub associated_bonding_curve: Pubkey,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ProjectDTO {
     pub id: i32,
     pub name: String,
@@ -45,14 +45,14 @@ pub struct ProjectDTO {
     pub pumpfun: PumpfunDTO
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserBalancesDTO {
     pub created_at: u64,
     pub user: BalanceDTO,
     pub wallets: HashMap<String, BalanceDTO>
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BalanceDTO {
     pub sol_balance: u64,
     pub token_balance: Option<u64>
