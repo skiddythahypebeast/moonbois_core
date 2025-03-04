@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use rpc::MoonboisClientError;
 use serde::{Deserialize, Serialize};
@@ -91,6 +92,19 @@ pub enum PumpfunSnipeStatus {
     SnipeFailed(String),
     CreateProjectFailed(String),
     Pending
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum PumpfunBumpStatus {
+    Running,
+    Pending,
+    Failed(String)
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct EnableBumpsParams {
+    bump_amount: u64,
+    bump_interval: Duration
 }
 
 pub struct Credentials {

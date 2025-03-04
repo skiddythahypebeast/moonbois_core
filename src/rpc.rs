@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use crate::BuyResponse;
 use crate::CreateProjectDTO;
+use crate::EnableBumpsParams;
 use crate::ProjectDTO;
+use crate::PumpfunBumpStatus;
 use crate::PumpfunSnipeStatus;
 use crate::SellResponse;
 use crate::UserBalancesDTO;
@@ -523,6 +525,73 @@ impl MoonboisClient {
 
             if response.status().is_success() {
                 return Ok(());
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn enable_bumps(&self, project_id: i32, params: EnableBumpsParams) -> Result<(), MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/pumpfun/bump/{}", project_id);
+            let request = self.inner.post(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .json(&params)
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(());
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn disable_bumps(&self) -> Result<(), MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/pumpfun/bump");
+            let request = self.inner.delete(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(());
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn get_bumps_status(&self) -> Result<PumpfunBumpStatus, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/pumpfun/bump");
+            let request = self.inner.get(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(response.json().await?);
             }
         
             if let StatusCode::NOT_FOUND = response.status() {
