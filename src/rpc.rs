@@ -270,9 +270,9 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_snipe_status(&self, deployer: Pubkey, snipe_id: String) -> Result<Option<PumpfunSnipeStatus>, MoonboisClientError> {
+    pub async fn get_snipe_status(&self, deployer: Pubkey) -> Result<Option<PumpfunSnipeStatus>, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/snipe/{}/{}/status", deployer, snipe_id);
+            let slug = format!("/pumpfun/snipe/{}/status", deployer);
             let request = self.inner.get(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
@@ -302,8 +302,7 @@ impl MoonboisClient {
             let response = self.inner.execute(request).await?;
 
             if response.status().is_success() {
-                let snipe_id: String = response.json().await?;
-                return Ok(PendingSnipe::new(deployer, snipe_id, self));
+                return Ok(PendingSnipe::new(deployer, self));
             }
         
             if let StatusCode::NOT_FOUND = response.status() {
@@ -403,9 +402,9 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn cancel_snipe(&self, deployer: &Pubkey, snipe_id: &str) -> Result<(), MoonboisClientError> {
+    pub async fn cancel_snipe(&self, deployer: &Pubkey) -> Result<(), MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/snipe/{}/{}", deployer, snipe_id);
+            let slug = format!("/pumpfun/snipe/{}", deployer);
             let request = self.inner.delete(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;

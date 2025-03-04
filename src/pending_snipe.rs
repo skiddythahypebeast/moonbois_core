@@ -20,18 +20,16 @@ enum State<'a> {
 
 #[pin_project]
 pub struct PendingSnipe<'a> {
-    pub snipe_id: String,
     pub deployer: Pubkey,
     provider: &'a MoonboisClient,
     state: State<'a>,
 }
 
 impl<'a> PendingSnipe<'a> {
-    pub fn new(deployer: Pubkey, snipe_id: String, provider: &'a MoonboisClient) -> Self {
+    pub fn new(deployer: Pubkey, provider: &'a MoonboisClient) -> Self {
         Self {
             deployer,
             provider,
-            snipe_id,
             state: State::Idle,
         }
     }
@@ -46,8 +44,7 @@ impl<'a> Future for PendingSnipe<'a> {
         match this.state {
             State::Idle => {
                 let fut = Box::pin(this.provider.get_snipe_status(
-                    this.deployer.clone(), 
-                    this.snipe_id.clone()
+                    this.deployer.clone()
                 ));
                 *this.state = State::Polling(fut);
 
@@ -57,8 +54,7 @@ impl<'a> Future for PendingSnipe<'a> {
                 match fut.as_mut().poll(ctx) {
                     Poll::Ready(_) => {
                         let fut = Box::pin(this.provider.get_snipe_status(
-                            this.deployer.clone(), 
-                            this.snipe_id.clone()
+                            this.deployer.clone()
                         ));
 
                         *this.state = State::Polling(fut);
