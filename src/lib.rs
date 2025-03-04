@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use rpc::MoonboisClientError;
 use serde::{Deserialize, Serialize};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair};
 
@@ -84,6 +85,24 @@ pub struct BuyResponse {
     pub buyer: Pubkey
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum PumpfunSnipeStatus {
+    Complete,
+    SnipeFailed(String),
+    CreateProjectFailed(String),
+    Pending
+}
+
 pub struct Credentials {
     pub signer: Keypair
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum PendingSnipeError {
+    #[error("ProjectCreationFailed: {0}")]
+    ProjectCreationFailed(String),
+    #[error("SnipeFailed: {0}")]
+    SnipeFailed(String),
+    #[error("MoonboisClientError: {0}")]
+    MoonboisClientError(#[from] MoonboisClientError)
 }

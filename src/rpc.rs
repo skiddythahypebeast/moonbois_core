@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::BuyResponse;
 use crate::CreateProjectDTO;
 use crate::ProjectDTO;
+use crate::PumpfunSnipeStatus;
 use crate::SellResponse;
 use crate::UserBalancesDTO;
 use crate::UserDTO;
@@ -38,7 +39,7 @@ impl MoonboisClient {
     pub fn new() -> Self {
         Self { 
             inner: Client::new(), 
-            base_url: Url::parse("https://www.moonbois.org").unwrap(),
+            base_url: Url::parse("http://127.0.0.1:8000").unwrap(),
             jwt: None
         }
     }
@@ -269,7 +270,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_snipe_status(&self, deployer: Pubkey, snipe_id: String) -> Result<bool, MoonboisClientError> {
+    pub async fn get_snipe_status(&self, deployer: Pubkey, snipe_id: String) -> Result<Option<PumpfunSnipeStatus>, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/pumpfun/snipe/{}/{}/status", deployer, snipe_id);
             let request = self.inner.get(self.base_url.join(&slug)?)
