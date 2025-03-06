@@ -88,10 +88,12 @@ pub struct BuyResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum PumpfunSnipeStatus {
-    Complete,
+    Pending,
+    InProgress,
+    Complete(ProjectDTO),
     SnipeFailed(String),
     CreateProjectFailed(String),
-    Pending
+    Cancelled,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -118,5 +120,7 @@ pub enum PendingSnipeError {
     #[error("SnipeFailed: {0}")]
     SnipeFailed(String),
     #[error("MoonboisClientError: {0}")]
-    MoonboisClientError(#[from] MoonboisClientError)
+    MoonboisClientError(#[from] MoonboisClientError),
+    #[error("Snipe task was cancelled")]
+    SnipeCancelled
 }

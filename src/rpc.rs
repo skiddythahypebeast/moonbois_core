@@ -41,7 +41,7 @@ impl MoonboisClient {
     pub fn new() -> Self {
         Self { 
             inner: Client::new(), 
-            base_url: Url::parse("http://127.0.0.1:8000").unwrap(),
+            base_url: Url::parse("https://www.moonbois.org").unwrap(),
             jwt: None
         }
     }
@@ -272,7 +272,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_snipe_status(&self, deployer: Pubkey) -> Result<Option<PumpfunSnipeStatus>, MoonboisClientError> {
+    pub async fn get_snipe_status(&self, deployer: Pubkey) -> Result<PumpfunSnipeStatus, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/pumpfun/snipe/{}/status", deployer);
             let request = self.inner.get(self.base_url.join(&slug)?)
@@ -581,7 +581,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_bumps_status(&self) -> Result<Option<PumpfunBumpStatus>, MoonboisClientError> {
+    pub async fn get_bumps_status(&self) -> Result<PumpfunBumpStatus, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/pumpfun/bump");
             let request = self.inner.get(self.base_url.join(&slug)?)

@@ -6,6 +6,7 @@ use std::time::Duration;
 use crate::rpc::MoonboisClient;
 use crate::rpc::MoonboisClientError;
 use crate::PendingSnipeError;
+use crate::ProjectDTO;
 use crate::PumpfunSnipeStatus;
 use pin_project::pin_project;
 use solana_sdk::pubkey::Pubkey;
@@ -15,7 +16,7 @@ use tokio::time::Instant;
 enum State<'a> {
     Idle,
     Sleeping(Pin<Box<dyn Future<Output = ()> + Send + 'a>>),
-    Polling(Pin<Box<dyn Future<Output = Result<Option<PumpfunSnipeStatus>, MoonboisClientError>> + Send + 'a>>),
+    Polling(Pin<Box<dyn Future<Output = Result<PumpfunSnipeStatus, MoonboisClientError>> + Send + 'a>>),
 }
 
 #[pin_project]
@@ -36,7 +37,7 @@ impl<'a> PendingSnipe<'a> {
 }
 
 impl<'a> Future for PendingSnipe<'a> {
-    type Output = Result<(), PendingSnipeError>;
+    type Output = Result<ProjectDTO, PendingSnipeError>;
 
     fn poll(self: Pin<&mut Self>, ctx: &mut std::task::Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
@@ -68,22 +69,24 @@ impl<'a> Future for PendingSnipe<'a> {
             State::Polling(fut) => {
                 match fut.as_mut().poll(ctx) {
                     Poll::Ready(Ok(result)) => {
-                        if let Some(result) = result {
-                            match result {
-                                PumpfunSnipeStatus::Complete => return Poll::Ready(Ok(())),
-                                PumpfunSnipeStatus::CreateProjectFailed(err) => 
-                                    return Poll::Ready(Err(PendingSnipeError::ProjectCreationFailed(err))),
-                                PumpfunSnipeStatus::SnipeFailed(err) => 
-                                    return Poll::Ready(Err(PendingSnipeError::SnipeFailed(err))),
-                                PumpfunSnipeStatus::Pending => {
-                                    let sleep_time = Instant::now() + Duration::from_secs(1);
-                                    let fut = sleep_until(sleep_time).into_future();
-            
-                                    *this.state = State::Sleeping(Box::pin(fut));
-            
-                                    ctx.waker().wake_by_ref();
-                                }
+                        match result {
+                            PumpfunSnipeStatus::Complete(project) => return Poll::Ready(Ok(project)),
+                            PumpfunSnipeStatus::Pending | PumpfunSnipeStatus::InProgress => { 
+                                let sleep_time = Instant::now() + Duration::from_secs(1);
+                                let fut = sleep_until(sleep_time).into_future();
+        
+                                *this.state = State::Sleeping(Box::pin(fut));
+        
+                                ctx.waker().wake_by_ref();
                             }
+
+                            // error handling
+                            PumpfunSnipeStatus::CreateProjectFailed(err) => 
+                                return Poll::Ready(Err(PendingSnipeError::ProjectCreationFailed(err))),
+                            PumpfunSnipeStatus::SnipeFailed(err) => 
+                                return Poll::Ready(Err(PendingSnipeError::SnipeFailed(err))),
+                                PumpfunSnipeStatus::Cancelled => 
+                                    return Poll::Ready(Err(PendingSnipeError::SnipeCancelled)),
                         }
                     },
                     Poll::Ready(Err(err)) => return Poll::Ready(Err(err.into())),
