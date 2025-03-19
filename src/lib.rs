@@ -126,3 +126,10 @@ pub enum PendingSnipeError {
     #[error("Snipe task was cancelled")]
     SnipeCancelled
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SetDTO {
+    pub id: i32,
+    pub name: String,
+    pub wallets: Vec<WalletDTO>
+}
