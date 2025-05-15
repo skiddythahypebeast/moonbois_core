@@ -35,6 +35,8 @@ pub struct PumpfunDTO {
     pub mint_id: Pubkey,
     pub bonding_curve: Pubkey,
     pub associated_bonding_curve: Pubkey,
+    pub creator: Pubkey,
+    pub creator_vault: Pubkey
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
