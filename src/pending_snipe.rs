@@ -5,6 +5,7 @@ use std::task::Poll;
 use std::time::Duration;
 use crate::rpc::MoonboisClient;
 use crate::rpc::MoonboisClientError;
+use crate::BatchedBundleResult;
 use crate::PendingSnipeError;
 use crate::ProjectDTO;
 use crate::PumpfunSnipeStatus;
@@ -37,7 +38,7 @@ impl<'a> PendingSnipe<'a> {
 }
 
 impl<'a> Future for PendingSnipe<'a> {
-    type Output = Result<ProjectDTO, PendingSnipeError>;
+    type Output = Result<(Vec<BatchedBundleResult>, ProjectDTO), PendingSnipeError>;
 
     fn poll(self: Pin<&mut Self>, ctx: &mut std::task::Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
@@ -70,7 +71,7 @@ impl<'a> Future for PendingSnipe<'a> {
                 match fut.as_mut().poll(ctx) {
                     Poll::Ready(Ok(result)) => {
                         match result {
-                            PumpfunSnipeStatus::Complete(project) => return Poll::Ready(Ok(project)),
+                            PumpfunSnipeStatus::Complete(result) => return Poll::Ready(Ok(result)),
                             PumpfunSnipeStatus::Pending | PumpfunSnipeStatus::InProgress => { 
                                 let sleep_time = Instant::now() + Duration::from_secs(1);
                                 let fut = sleep_until(sleep_time).into_future();

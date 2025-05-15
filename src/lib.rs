@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use rpc::MoonboisClientError;
 use serde::{Deserialize, Serialize};
-use solana_sdk::{pubkey::Pubkey, signature::Keypair};
+use solana_sdk::{pubkey::Pubkey, signature::{Keypair, Signature}};
 
 mod pending_snipe;
 pub mod rpc;
@@ -12,8 +12,7 @@ pub mod rpc;
 pub struct UserDTO {
     pub id: i32,
     pub public_key: Pubkey,
-    pub sol_balance: u64,
-    pub wallets: HashMap<String, WalletDTO>
+    pub sol_balance: u64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -26,8 +25,7 @@ pub struct WalletDTO {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserExportDTO {
-    pub wallets: Vec<String>,
-    pub main: String
+    pub wallets: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -45,7 +43,8 @@ pub struct ProjectDTO {
     pub name: String,
     pub deployer: Pubkey,
     pub user_id: i32,
-    pub pumpfun: PumpfunDTO
+    pub pumpfun: PumpfunDTO,
+    pub set_id: i32
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -63,7 +62,8 @@ pub struct BalanceDTO {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateProjectDTO {
-    pub mint_id: Pubkey
+    pub mint_id: Pubkey,
+    pub set_id: i32
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -89,10 +89,30 @@ pub struct BuyResponse {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BatchedBundleReceipt {
+    pub fee_paid: u64,
+    pub balances_before: HashMap<String, u64>,
+    pub balances_after: HashMap<String, u64>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BatchedBundleFailed {
+    pub reason: String
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum BatchedBundleResult {
+    Success(Vec<BatchedBundleReceipt>),
+    TransactionFailed(BatchedBundleFailed),
+    BundleNotIncluded,
+    Unconfirmed,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum PumpfunSnipeStatus {
     Pending,
     InProgress,
-    Complete(ProjectDTO),
+    Complete((Vec<BatchedBundleResult>, ProjectDTO)),
     SnipeFailed(String),
     CreateProjectFailed(String),
     Cancelled,
@@ -132,4 +152,43 @@ pub struct SetDTO {
     pub id: i32,
     pub name: String,
     pub wallets: Vec<WalletDTO>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct SolTransferFailedReason(pub String);
+
+#[derive(Deserialize, Debug)]
+pub struct PendingSolTransferData {
+    pub from: Pubkey,
+    pub to: Pubkey,
+    pub amount: u64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct SolTransferReceipt {
+    pub fee_paid: u64,
+    pub signature: Signature,
+    pub data: PendingSolTransferData,
+    pub balances_before: HashMap<String, u64>,
+    pub balances_after: HashMap<String, u64>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct SolTransferFailed {
+    pub signature: Option<Signature>,
+    pub data: PendingSolTransferData,
+    pub reason: SolTransferFailedReason
+}
+
+#[derive(Deserialize, Debug)]
+pub enum SolTransferResponse {
+    Success(SolTransferReceipt),
+    Failed(SolTransferFailed),
+    CouldNotConfirm(Option<PendingSolTransferData>)
+}
+
+#[derive(Deserialize, Debug)]
+pub struct SolBalanceResponse {
+    pub includes_all_balances: bool,
+    pub balances: HashMap<String, u64>
 }
