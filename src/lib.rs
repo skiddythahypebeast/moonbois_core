@@ -9,13 +9,6 @@ mod pending_snipe;
 pub mod rpc;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct UserDTO {
-    pub id: i32,
-    pub public_key: Pubkey,
-    pub sol_balance: u64
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WalletDTO {
     pub id: i32,
     pub sol_balance: u64,
@@ -47,6 +40,29 @@ pub struct ProjectDTO {
     pub set_id: i32
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PumpfunAutoBuyRequest {
+    pub project_id: i32, 
+    pub amount_in_sol: u64, 
+    pub bundled: bool
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PumpfunBuyRequest {
+    pub project_id: i32, 
+    pub amount_in_sol: u64, 
+    pub bundled: bool,
+    pub wallet_id: i32
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum GrpcBundleResult {
+    Confirmed(Vec<Signature>),
+    Failed(String),
+    Unconfirmed,
+    TimedOut
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserBalancesDTO {
     pub created_at: u64,
@@ -55,15 +71,29 @@ pub struct UserBalancesDTO {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct BalanceDTO {
-    pub sol_balance: u64,
-    pub token_balance: Option<u64>
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateProjectDTO {
     pub mint_id: Pubkey,
     pub set_id: i32
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct UserDTO {
+    pub id: i32,
+    pub public_key: Pubkey,
+    pub sol_balance: u64
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SetDTO {
+    pub id: i32,
+    pub name: String,
+    pub wallets: Vec<WalletDTO>
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BalanceDTO {
+    pub sol_balance: u64,
+    pub token_balance: Option<u64>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -79,6 +109,8 @@ pub struct SellResponse {
     pub amount_out: u64,
     pub seller: Pubkey
 }
+
+
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BuyResponse {
@@ -145,13 +177,6 @@ pub enum PendingSnipeError {
     MoonboisClientError(#[from] MoonboisClientError),
     #[error("Snipe task was cancelled")]
     SnipeCancelled
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SetDTO {
-    pub id: i32,
-    pub name: String,
-    pub wallets: Vec<WalletDTO>
 }
 
 #[derive(Deserialize, Debug)]
