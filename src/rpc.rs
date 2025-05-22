@@ -1,10 +1,13 @@
 use crate::CreateProjectDTO;
 use crate::EnableBumpsParams;
-use crate::GrpcBundleResult;
 use crate::ProjectDTO;
 use crate::PumpfunAutoBuyRequest;
+use crate::PumpfunAutoSellRequest;
 use crate::PumpfunBumpStatus;
 use crate::PumpfunBuyRequest;
+use crate::PumpfunBuyResult;
+use crate::PumpfunSellRequest;
+use crate::PumpfunSellResult;
 use crate::PumpfunSnipeStatus;
 use crate::SetDTO;
 use crate::SolBalanceResponse;
@@ -313,11 +316,20 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn sell(&self, project_id: i32, sniper_id: i32, amount_in_tokens: u64) -> Result<GrpcBundleResult, MoonboisClientError> {
+    pub async fn sell(&self, project_id: i32, wallet_id: i32, amount_in_tokens: u64, bundled: bool) -> Result<PumpfunSellResult, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/sell/{}/{}/{}", project_id, sniper_id, amount_in_tokens);
+            let data = serde_json::to_vec(&PumpfunSellRequest {
+                bundled,
+                project_id,
+                amount_in_tokens,
+                wallet_id
+            })?;
+
+            let slug = format!("/pumpfun/auto_sell");
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
+                .header("Content-Type", "application/json")
+                .body(data)
                 .build()?;
 
             let response = self.inner.execute(request).await?;
@@ -335,7 +347,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn buy(&self, project_id: i32, sniper_id: i32, amount_in_sol: u64, bundled: bool) -> Result<GrpcBundleResult, MoonboisClientError> {
+    pub async fn buy(&self, project_id: i32, sniper_id: i32, amount_in_sol: u64, bundled: bool) -> Result<PumpfunBuyResult, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let data = serde_json::to_vec(&PumpfunBuyRequest {
                 amount_in_sol,
@@ -366,7 +378,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn auto_buy(&self, project_id: i32, amount_in_sol: u64, bundled: bool) -> Result<GrpcBundleResult, MoonboisClientError> {
+    pub async fn auto_buy(&self, project_id: i32, amount_in_sol: u64, bundled: bool) -> Result<PumpfunBuyResult, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let data = serde_json::to_vec(&PumpfunAutoBuyRequest {
                 amount_in_sol,
@@ -377,6 +389,7 @@ impl MoonboisClient {
             let slug = format!("/pumpfun/auto_buy");
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
+                .header("Content-Type", "application/json")
                 .body(data)
                 .build()?;
 
@@ -395,11 +408,18 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn auto_sell(&self, project_id: i32) -> Result<GrpcBundleResult, MoonboisClientError> {
+    pub async fn auto_sell(&self, project_id: i32) -> Result<PumpfunSellResult, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/auto_sell/{}", project_id);
+            let data = serde_json::to_vec(&PumpfunAutoSellRequest {
+                bundled: false,
+                project_id,
+            })?;
+
+            let slug = format!("/pumpfun/auto_sell");
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
+                .header("Content-Type", "application/json")
+                .body(data)
                 .build()?;
 
             let response = self.inner.execute(request).await?;

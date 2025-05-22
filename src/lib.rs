@@ -70,6 +70,32 @@ pub struct UserBalancesDTO {
     pub wallets: HashMap<String, BalanceDTO>
 }
 
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PumpfunAutoSellRequest {
+    pub project_id: i32,
+    pub bundled: bool
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PumpfunSellRequest {
+    pub project_id: i32,
+    pub bundled: bool,
+    pub wallet_id: i32,
+    pub amount_in_tokens: u64
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum PumpfunBuyResult {
+    Bundled(GrpcBundleResult),
+    Standard(Signature)
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub enum PumpfunSellResult {
+    Bundled(GrpcBundleResult),
+    Standard(Signature),
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CreateProjectDTO {
     pub mint_id: Pubkey,
