@@ -2,7 +2,9 @@ use crate::CreateProjectDTO;
 use crate::EnableBumpsParams;
 use crate::GrpcBundleResult;
 use crate::ProjectDTO;
+use crate::PumpfunAutoBuyRequest;
 use crate::PumpfunBumpStatus;
+use crate::PumpfunBuyRequest;
 use crate::PumpfunSnipeStatus;
 use crate::SetDTO;
 use crate::SolBalanceResponse;
@@ -333,11 +335,20 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn buy(&self, project_id: i32, sniper_id: i32, amount_in_sol: u64) -> Result<GrpcBundleResult, MoonboisClientError> {
+    pub async fn buy(&self, project_id: i32, sniper_id: i32, amount_in_sol: u64, bundled: bool) -> Result<GrpcBundleResult, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/buy/{}/{}/{}", project_id, amount_in_sol, sniper_id);
+            let data = serde_json::to_vec(&PumpfunBuyRequest {
+                amount_in_sol,
+                bundled,
+                project_id,
+                wallet_id: sniper_id
+            })?;
+
+            let slug = format!("/pumpfun/buy");
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
+                .header("Content-Type", "application/json")
+                .body(data)
                 .build()?;
 
             let response = self.inner.execute(request).await?;
@@ -355,11 +366,18 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn auto_buy(&self, project_id: i32, lamports: u64) -> Result<GrpcBundleResult, MoonboisClientError> {
+    pub async fn auto_buy(&self, project_id: i32, amount_in_sol: u64, bundled: bool) -> Result<GrpcBundleResult, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/pumpfun/auto_buy/{}/{}", project_id, lamports);
+            let data = serde_json::to_vec(&PumpfunAutoBuyRequest {
+                amount_in_sol,
+                bundled,
+                project_id
+            })?;
+
+            let slug = format!("/pumpfun/auto_buy");
             let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
+                .body(data)
                 .build()?;
 
             let response = self.inner.execute(request).await?;
