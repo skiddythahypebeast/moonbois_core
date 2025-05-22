@@ -408,10 +408,10 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn auto_sell(&self, project_id: i32) -> Result<PumpfunSellResult, MoonboisClientError> {
+    pub async fn auto_sell(&self, project_id: i32, bundled: bool) -> Result<PumpfunSellResult, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let data = serde_json::to_vec(&PumpfunAutoSellRequest {
-                bundled: false,
+                bundled,
                 project_id,
             })?;
 
