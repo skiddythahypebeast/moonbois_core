@@ -166,11 +166,23 @@ pub enum BatchedBundleResult {
     Unconfirmed,
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub enum PumpfunSnipeResults {
+    Success(Vec<Signature>),
+    Failed(String)
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PumpfunSnipeComplete {
+    pub project: ProjectDTO,
+    pub snipe_results: Vec<PumpfunSnipeResults>
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum PumpfunSnipeStatus {
     Pending,
     InProgress,
-    Complete((Vec<BatchedBundleResult>, ProjectDTO)),
+    Complete(PumpfunSnipeComplete),
     SnipeFailed(String),
     CreateProjectFailed(String),
     Cancelled,

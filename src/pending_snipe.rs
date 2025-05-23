@@ -5,9 +5,8 @@ use std::task::Poll;
 use std::time::Duration;
 use crate::rpc::MoonboisClient;
 use crate::rpc::MoonboisClientError;
-use crate::BatchedBundleResult;
 use crate::PendingSnipeError;
-use crate::ProjectDTO;
+use crate::PumpfunSnipeComplete;
 use crate::PumpfunSnipeStatus;
 use pin_project::pin_project;
 use solana_sdk::pubkey::Pubkey;
@@ -38,7 +37,7 @@ impl<'a> PendingSnipe<'a> {
 }
 
 impl<'a> Future for PendingSnipe<'a> {
-    type Output = Result<(Vec<BatchedBundleResult>, ProjectDTO), PendingSnipeError>;
+    type Output = Result<PumpfunSnipeComplete, PendingSnipeError>;
 
     fn poll(self: Pin<&mut Self>, ctx: &mut std::task::Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
