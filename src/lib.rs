@@ -250,8 +250,20 @@ pub enum SolTransferResponse {
     CouldNotConfirm(Option<PendingSolTransferData>)
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct SolBalanceResponse {
     pub includes_all_balances: bool,
     pub balances: HashMap<String, u64>
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct TokenBalanceResponse {
+    pub includes_all_balances: bool,
+    pub balances: HashMap<String, Option<u64>>
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct GetBalanceResponse {
+    pub sol: SolBalanceResponse,
+    pub token: Option<TokenBalanceResponse>,
 }

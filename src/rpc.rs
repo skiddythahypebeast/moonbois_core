@@ -1,5 +1,6 @@
 use crate::CreateProjectDTO;
 use crate::EnableBumpsParams;
+use crate::GetBalanceResponse;
 use crate::ProjectDTO;
 use crate::PumpfunAutoBuyRequest;
 use crate::PumpfunAutoSellRequest;
@@ -10,7 +11,6 @@ use crate::PumpfunSellRequest;
 use crate::PumpfunSellResult;
 use crate::PumpfunSnipeStatus;
 use crate::SetDTO;
-use crate::SolBalanceResponse;
 use crate::SolTransferResponse;
 use crate::UserDTO;
 use crate::UserExportDTO;
@@ -790,9 +790,9 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn get_set_balance(&self, set_id: i32) -> Result<SolBalanceResponse, MoonboisClientError> {
+    pub async fn get_set_balance(&self, set_id: i32, project_id: Option<i32>) -> Result<GetBalanceResponse, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/sets/{}/balance", set_id);
+            let slug = format!("/sets/{}/balance?project_id={:?}", set_id, project_id);
             let request = self.inner.get(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
