@@ -792,7 +792,12 @@ impl MoonboisClient {
     }
     pub async fn get_set_balance(&self, set_id: i32, project_id: Option<i32>) -> Result<GetBalanceResponse, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
-            let slug = format!("/sets/{}/balance?project_id={:?}", set_id, project_id);
+            let slug = if let Some(project_id) = project_id {
+                format!("/sets/{}/balance?project_id={}", set_id, project_id)
+            } else {
+                format!("/sets/{}/balance", set_id)
+            };
+
             let request = self.inner.get(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
