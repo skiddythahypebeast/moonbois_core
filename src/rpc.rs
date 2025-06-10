@@ -21,7 +21,6 @@ use reqwest::Client;
 use reqwest::Error;
 use reqwest::StatusCode;
 use reqwest::Url;
-use serde_json::json;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
@@ -73,17 +72,15 @@ impl MoonboisClient {
         
         Err(MoonboisClientError::UnhandledServerError(response.text().await?))
     }
-    pub async fn create_user(&self, credentials: &Credentials, signer: &Keypair) -> Result<(), MoonboisClientError> {
+    pub async fn create_user(&self, credentials: &Credentials) -> Result<(), MoonboisClientError> {
         let message = "authorize";
         let signature = credentials.signer.sign_message(message.as_bytes());
         let pubkey = credentials.signer.pubkey().to_string();
-        let body = json!({ "signer": signer.to_base58_string() });
 
-        let request = self.inner.post(self.base_url.join(&format!("/auth/{}", signer.to_base58_string()))?)
+        let request = self.inner.post(self.base_url.join(&format!("/auth"))?)
             .header("X-public-key", pubkey)
             .header("X-signature", signature.to_string())
             .header("X-message", message)
-            .body(serde_json::to_vec(&body)?)
             .build()?;
 
         let response = self.inner.execute(request).await?;
