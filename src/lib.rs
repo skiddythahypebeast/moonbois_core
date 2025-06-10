@@ -271,5 +271,5 @@ pub struct GetBalanceResponse {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct GetTokenAccountsResponse {
     pub includes_all_accounts: bool,
-    pub accounts: HashMap<Pubkey, Vec<Pubkey>>
+    pub accounts: HashMap<String, Vec<Pubkey>>
 }
