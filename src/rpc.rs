@@ -837,6 +837,28 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
+    pub async fn close_set_token_accounts(&self, set_id: i32) -> Result<(), MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/sets/{}/token_accounts", set_id);
+            let request = self.inner.delete(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(());
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
