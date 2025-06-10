@@ -267,3 +267,9 @@ pub struct GetBalanceResponse {
     pub sol: SolBalanceResponse,
     pub token: Option<TokenBalanceResponse>,
 }
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct GetTokenAccountsResponse {
+    pub includes_all_accounts: bool,
+    pub accounts: HashMap<Pubkey, Vec<Pubkey>>
+}

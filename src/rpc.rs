@@ -1,6 +1,7 @@
 use crate::CreateProjectDTO;
 use crate::EnableBumpsParams;
 use crate::GetBalanceResponse;
+use crate::GetTokenAccountsResponse;
 use crate::ProjectDTO;
 use crate::PumpfunAutoBuyRequest;
 use crate::PumpfunAutoSellRequest;
@@ -798,6 +799,28 @@ impl MoonboisClient {
                 format!("/sets/{}/balance", set_id)
             };
 
+            let request = self.inner.get(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(response.json().await?);
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn get_set_token_accounts(&self, set_id: i32) -> Result<GetTokenAccountsResponse, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/sets/{}/token_accounts", set_id);
             let request = self.inner.get(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
