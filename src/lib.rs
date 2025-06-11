@@ -273,3 +273,39 @@ pub struct GetTokenAccountsResponse {
     pub includes_all_accounts: bool,
     pub accounts: HashMap<String, Vec<Pubkey>>
 }
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct TokenAccountCloseContext {
+    pub signer: Pubkey,
+    pub accounts: Vec<Pubkey>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub enum TokenAccountCloseResponse {
+    Success(TokenAccountCloseReceipt),
+    Failed(TokenAccountCloseFailure),
+    CouldNotConfirm(Option<TokenAccountCloseContext>),
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct TokenAccountCloseReceipt {
+    pub signature: Signature,
+    pub closed_accounts: Vec<Pubkey>,
+    pub fee_paid: u64,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct TokenAccountCloseFailure {
+    pub account: Pubkey,
+    pub reason: TokenCloseFailedReason,
+    pub signature: Option<Signature>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub enum TokenCloseFailedReason {
+    AccountHasBalance,
+    InvalidOwner,
+    PreflightFailed(String),
+    TransactionFailed(String),
+    Unknown(String),
+}

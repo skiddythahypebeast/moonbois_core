@@ -13,6 +13,7 @@ use crate::PumpfunSellResult;
 use crate::PumpfunSnipeStatus;
 use crate::SetDTO;
 use crate::SolTransferResponse;
+use crate::TokenAccountCloseResponse;
 use crate::UserDTO;
 use crate::UserExportDTO;
 use crate::WalletDTO;
@@ -837,7 +838,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn close_set_token_accounts(&self, set_id: i32) -> Result<(), MoonboisClientError> {
+    pub async fn close_set_token_accounts(&self, set_id: i32) -> Result<TokenAccountCloseResponse, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/sets/{}/token_accounts", set_id);
             let request = self.inner.delete(self.base_url.join(&slug)?)
@@ -847,7 +848,7 @@ impl MoonboisClient {
             let response = self.inner.execute(request).await?;
 
             if response.status().is_success() {
-                return Ok(());
+                return Ok(response.json().await?);
             }
         
             if let StatusCode::NOT_FOUND = response.status() {
