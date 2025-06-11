@@ -284,7 +284,7 @@ pub struct TokenAccountCloseContext {
 pub enum TokenAccountCloseResponse {
     Success(TokenAccountCloseReceipt),
     Failed(TokenAccountCloseFailure),
-    CouldNotConfirm(Option<TokenAccountCloseContext>),
+    CouldNotConfirm(Option<TokenAccountCloseFailure>),
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
