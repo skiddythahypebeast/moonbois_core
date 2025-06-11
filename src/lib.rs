@@ -275,12 +275,6 @@ pub struct GetTokenAccountsResponse {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct TokenAccountCloseContext {
-    pub signer: Pubkey,
-    pub accounts: Vec<Pubkey>,
-}
-
-#[derive(Deserialize, Serialize, Clone, Debug)]
 pub enum TokenAccountCloseResponse {
     Success(TokenAccountCloseReceipt),
     Failed(TokenAccountCloseFailure),
