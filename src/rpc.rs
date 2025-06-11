@@ -838,7 +838,7 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
-    pub async fn close_set_token_accounts(&self, set_id: i32) -> Result<TokenAccountCloseResponse, MoonboisClientError> {
+    pub async fn close_set_token_accounts(&self, set_id: i32) -> Result<Vec<TokenAccountCloseResponse>, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/sets/{}/token_accounts", set_id);
             let request = self.inner.delete(self.base_url.join(&slug)?)
