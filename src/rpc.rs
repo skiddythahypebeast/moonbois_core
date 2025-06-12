@@ -838,6 +838,50 @@ impl MoonboisClient {
 
         Err(MoonboisClientError::MissingJWT)
     }
+    pub async fn duplicate_set(&self, set_id: i32) -> Result<SetDTO, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/sets/{}/duplicate", set_id);
+            let request = self.inner.delete(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(response.json().await?);
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
+    pub async fn transfer_set_funds(&self, from_set_id: i32, to_set_id: i32) -> Result<Vec<SolTransferResponse>, MoonboisClientError> {
+        if let Some(jwt) = &self.jwt {
+            let slug = format!("/sets/{}/transfer_funds/{}", from_set_id, to_set_id);
+            let request = self.inner.post(self.base_url.join(&slug)?)
+                .header("Authorization", format!("Bearer {jwt}"))
+                .build()?;
+
+            let response = self.inner.execute(request).await?;
+
+            if response.status().is_success() {
+                return Ok(response.json().await?);
+            }
+        
+            if let StatusCode::NOT_FOUND = response.status() {
+                return Err(MoonboisClientError::NotFound);
+            }
+
+            return Err(MoonboisClientError::UnhandledServerError(response.text().await?));
+        };
+
+        Err(MoonboisClientError::MissingJWT)
+    }
     pub async fn close_set_token_accounts(&self, set_id: i32) -> Result<Vec<TokenAccountCloseResponse>, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/sets/{}/token_accounts", set_id);
