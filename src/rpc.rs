@@ -885,7 +885,7 @@ impl MoonboisClient {
     pub async fn close_set_token_accounts(&self, set_id: i32) -> Result<Vec<TokenAccountCloseResponse>, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/sets/{}/token_accounts", set_id);
-            let request = self.inner.post(self.base_url.join(&slug)?)
+            let request = self.inner.delete(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
 
