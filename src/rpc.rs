@@ -841,7 +841,7 @@ impl MoonboisClient {
     pub async fn duplicate_set(&self, set_id: i32) -> Result<SetDTO, MoonboisClientError> {
         if let Some(jwt) = &self.jwt {
             let slug = format!("/sets/{}/duplicate", set_id);
-            let request = self.inner.delete(self.base_url.join(&slug)?)
+            let request = self.inner.post(self.base_url.join(&slug)?)
                 .header("Authorization", format!("Bearer {jwt}"))
                 .build()?;
 
